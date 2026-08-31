@@ -1,128 +1,64 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <title>Heritage Asia Holdings — Land Sales Management</title>
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080808"><link rel="manifest" href="./manifest.webmanifest"><title>Heritage Asia Holdings</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: { extend: { colors: {
-        heritageBlack:'#0a0a0a', heritagePanel:'#141414', heritageGold:'#d4af37', heritageGold2:'#f0cf69', heritageCream:'#fff8e7'
-      }, boxShadow:{gold:'0 12px 36px rgba(212,175,55,.18)'} } }
-    }
-  </script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    :root{--gold:#d4af37;--dark:#080808;--panel:#141414;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *{box-sizing:border-box}html,body{min-height:100%;background:var(--dark);color:#f5f5f5}body{margin:0;font-family:Inter,system-ui,sans-serif;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom)}
+    .gold{color:var(--gold)}.panel{background:linear-gradient(145deg,#171717,#0d0d0d);border:1px solid #333;border-radius:18px}.btn{min-height:42px;padding:.65rem 1rem;border-radius:10px;font-weight:800}.btn-gold{background:var(--gold);color:#080808}.btn-danger{background:#7f1d1d;color:#fff}.btn-ghost{border:1px solid #555}.field{width:100%;background:#090909;border:1px solid #444;border-radius:10px;padding:.72rem;color:#fff}.field:focus{outline:2px solid var(--gold);border-color:transparent}.nav{position:sticky;top:var(--safe-top);z-index:20;background:#080808ee;backdrop-filter:blur(12px)}dialog{background:#111;color:white;border:1px solid #555;border-radius:18px;width:min(680px,calc(100% - 24px));max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px);overflow:auto}dialog::backdrop{background:#000b}.toast{position:fixed;right:16px;bottom:calc(16px + var(--safe-bottom));z-index:50;background:#222;border:1px solid var(--gold);padding:12px 16px;border-radius:10px}.hidden{display:none!important}@media(max-width:640px){.desktop-label{display:none}.btn{min-height:46px}main{padding-bottom:calc(20px + var(--safe-bottom))}}
+  </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+<body>
+  <header class="nav border-b border-zinc-800 px-4 py-3"><div class="max-w-7xl mx-auto flex items-center justify-between gap-3"><div><h1 class="font-black tracking-wide gold">HERITAGE ASIA HOLDINGS</h1><p class="text-xs text-zinc-400">Land Sales Management</p></div><div class="flex gap-2"><button id="settingsBtn" class="btn btn-ghost">Settings</button><button id="logoutBtn" class="btn btn-ghost hidden">Logout</button></div></div></header>
+  <main class="max-w-7xl mx-auto p-4">
+    <section id="loginView" class="panel max-w-md mx-auto mt-12 p-6"><h2 class="text-2xl font-black gold">Secure Login</h2><form id="loginForm" class="grid gap-3 mt-5"><input id="loginEmail" class="field" type="email" placeholder="Email" required><input id="loginPassword" class="field" type="password" placeholder="Password" required minlength="6"><button class="btn btn-gold">Login</button></form><p class="text-xs text-zinc-400 mt-4">Create the first admin in Firebase Authentication, then add the matching users document as described in README.</p></section>
+    <section id="appView" class="hidden">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 my-4" id="stats"></div>
+      <nav id="tabs" class="flex gap-2 overflow-x-auto pb-3"></nav>
+      <section class="panel p-4"><div class="flex items-center justify-between gap-3"><div><h2 id="sectionTitle" class="text-xl font-black gold"></h2><p id="sectionHelp" class="text-sm text-zinc-400"></p></div><button id="addBtn" class="btn btn-gold">+ Add</button></div><div id="records" class="grid md:grid-cols-2 xl:grid-cols-3 gap-3 mt-4"></div></section>
+    </section>
+  </main>
+
+  <dialog id="entityDialog"><form id="entityForm" method="dialog" class="p-5"><div class="flex justify-between"><h3 id="formTitle" class="text-xl font-black gold"></h3><button type="button" class="btn btn-ghost" data-close>✕</button></div><input type="hidden" id="recordId"><div id="formFields" class="grid md:grid-cols-2 gap-3 mt-4"></div><div class="flex justify-end gap-2 mt-5"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="submit" class="btn btn-gold">Save</button></div></form></dialog>
+  <dialog id="settingsDialog"><form id="settingsForm" class="p-5"><div class="flex justify-between"><h3 class="text-xl font-black gold">EmailJS Settings</h3><button type="button" class="btn btn-ghost" data-close>✕</button></div><div class="grid gap-3 mt-4"><input id="emailService" class="field" placeholder="Service ID"><input id="emailTemplate" class="field" placeholder="Template ID"><input id="emailPublic" class="field" placeholder="Public Key"><p class="text-xs text-zinc-400">Values are stored in this browser. Configure the template attachment variable as pdf_attachment.</p></div><button class="btn btn-gold mt-4">Save Settings</button></form></dialog>
   <div id="toast" class="toast hidden"></div>
 
-  <section id="authGate" class="auth-gate">
-    <div class="auth-card">
-      <div class="brand-lockup">
-        <img src="assets/heritage-logo.jpeg" alt="Heritage Asia Holdings" class="brand-logo" />
-        <div>
-          <p class="eyebrow">HERITAGE ASIA HOLDINGS (PVT) LTD</p>
-          <h1>Land Sales Management</h1>
-          <p class="muted">Secure project, block, customer, payment and document control.</p>
-        </div>
-      </div>
-      <form id="loginForm" class="grid gap-4 mt-6">
-        <label class="field"><span>Email</span><input id="loginEmail" type="email" required placeholder="admin@company.com" /></label>
-        <label class="field"><span>Password</span><input id="loginPassword" type="password" required placeholder="••••••••" /></label>
-        <button class="btn btn-gold" type="submit"><i data-lucide="log-in"></i> Sign In</button>
-      </form>
-      <div id="authMsg" class="notice mt-4 hidden"></div>
-      <div id="bootstrapPanel" class="hidden mt-5 border-t border-zinc-800 pt-5">
-        <p class="font-black text-amber-300">First Admin Setup</p>
-        <p class="text-sm text-zinc-400 mt-1">This Firebase account is authenticated but does not yet have a management profile.</p>
-        <label class="field mt-4"><span>Display Name</span><input id="bootstrapName" placeholder="Administrator" /></label>
-        <button id="bootstrapBtn" type="button" class="btn btn-outline-gold mt-3"><i data-lucide="shield-check"></i>Create Admin Profile</button>
-      </div>
-    </div>
-  </section>
-
-  <div id="appShell" class="hidden min-h-screen lg:flex">
-    <aside class="sidebar no-print">
-      <div class="sidebar-brand">
-        <img src="assets/heritage-logo.jpeg" class="sidebar-logo" alt="Heritage Asia" />
-        <div><div class="font-black text-white tracking-wide">HERITAGE ASIA</div><div class="text-[10px] text-amber-300 tracking-[.22em]">HOLDINGS</div></div>
-      </div>
-      <nav id="mainNav" class="mt-7 space-y-2">
-        <button class="nav-btn active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
-        <button class="nav-btn" data-view="projects"><i data-lucide="map"></i><span>Land Projects</span></button>
-        <button class="nav-btn" data-view="blocks"><i data-lucide="grid-3x3"></i><span>Blocks</span></button>
-        <button class="nav-btn" data-view="sales"><i data-lucide="badge-dollar-sign"></i><span>Sales / Reservations</span></button>
-        <button class="nav-btn" data-view="customers"><i data-lucide="users"></i><span>Customers</span></button>
-        <button class="nav-btn" data-view="payments"><i data-lucide="wallet-cards"></i><span>Payments</span></button>
-        <button class="nav-btn" data-view="documents"><i data-lucide="file-text"></i><span>Documents</span></button>
-        <button class="nav-btn admin-only" data-view="users"><i data-lucide="shield-user"></i><span>Users</span></button>
-        <button class="nav-btn admin-only" data-view="settings"><i data-lucide="settings"></i><span>Settings</span></button>
-      </nav>
-      <div class="sidebar-status mt-auto">
-        <span id="cloudDot" class="cloud-dot"></span><span id="cloudText">Connecting...</span>
-      </div>
-    </aside>
-
-    <main class="flex-1 min-w-0">
-      <header class="topbar no-print">
-        <div><p class="eyebrow">HERITAGE ASIA HOLDINGS</p><h2 id="pageTitle" class="text-2xl md:text-3xl font-black">Dashboard</h2></div>
-        <div class="flex items-center gap-2">
-          <div class="user-chip"><span id="userName">User</span><small id="userRole">Role</small></div>
-          <button id="signOutBtn" class="icon-btn" title="Sign Out"><i data-lucide="log-out"></i></button>
-        </div>
-      </header>
-
-      <section class="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
-        <div id="view-dashboard" class="app-view">
-          <div class="hero">
-            <div><p class="text-amber-300 font-black tracking-[.18em] text-xs">LAND SALES CONTROL CENTER</p><h1 class="text-3xl md:text-5xl font-black mt-3">Projects, blocks and sales.<br/>One secure system.</h1><p class="text-zinc-400 mt-3 max-w-2xl">Real-time block availability, field sales, signatures, PDF documents and payment tracking.</p></div>
-            <button id="quickSaleBtn" class="btn btn-gold"><i data-lucide="file-signature"></i> New Sale / Reservation</button>
-          </div>
-          <div id="statsGrid" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6"></div>
-          <div class="grid xl:grid-cols-[1.2fr_.8fr] gap-6 mt-6">
-            <div class="panel"><div class="panel-head"><div><h3>Recent Sales</h3><p>Latest reservations and confirmed sales</p></div></div><div id="recentSales" class="mt-4"></div></div>
-            <div class="panel"><div class="panel-head"><div><h3>Block Status</h3><p>Live inventory overview</p></div></div><div id="blockStatusSummary" class="mt-4"></div></div>
-          </div>
-        </div>
-
-        <div id="view-projects" class="app-view hidden">
-          <div class="section-head"><div><h2>Land Projects</h2><p>Create and manage block-out developments.</p></div><button id="newProjectBtn" class="btn btn-gold manager-action"><i data-lucide="plus"></i>New Project</button></div>
-          <div id="projectsGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-5"></div>
-        </div>
-
-        <div id="view-blocks" class="app-view hidden">
-          <div class="section-head"><div><h2>Block Inventory</h2><p>Available, reserved and sold blocks in real time.</p></div><button id="newBlockBtn" class="btn btn-gold manager-action"><i data-lucide="plus"></i>Add Block</button></div>
-          <div class="panel mt-5"><div class="flex flex-wrap gap-3"><select id="blockProjectFilter" class="control"><option value="">All Projects</option></select><select id="blockStatusFilter" class="control"><option value="">All Statuses</option><option>AVAILABLE</option><option>RESERVED</option><option>SOLD</option><option>HOLD</option></select></div><div id="blocksGrid" class="block-grid mt-5"></div></div>
-        </div>
-
-        <div id="view-sales" class="app-view hidden">
-          <div class="section-head"><div><h2>Sales & Reservations</h2><p>Capture customers, signatures and issue PDF documents.</p></div><button id="newSaleBtn" class="btn btn-gold sales-action"><i data-lucide="file-signature"></i>New Sale / Reservation</button></div>
-          <div class="panel mt-5"><div id="salesTable"></div></div>
-        </div>
-
-        <div id="view-customers" class="app-view hidden"><div class="section-head"><div><h2>Customers</h2><p>Customer CRM and identity records.</p></div></div><div class="panel mt-5"><div id="customersTable"></div></div></div>
-        <div id="view-payments" class="app-view hidden"><div class="section-head"><div><h2>Payments</h2><p>Deposits, installments and outstanding balances.</p></div></div><div class="panel mt-5"><div id="paymentsTable"></div></div></div>
-        <div id="view-documents" class="app-view hidden"><div class="section-head"><div><h2>Documents</h2><p>Generated receipts, reservation forms and sale agreements.</p></div></div><div class="panel mt-5"><div id="documentsTable"></div></div></div>
-        <div id="view-users" class="app-view hidden"><div class="section-head"><div><h2>Users</h2><p>Admin, management and site/sales officer access.</p></div><button id="newUserBtn" class="btn btn-gold admin-only"><i data-lucide="user-plus"></i>Create User</button></div><div class="panel mt-5"><div id="usersTable"></div></div></div>
-        <div id="view-settings" class="app-view hidden"><div class="section-head"><div><h2>Settings</h2><p>Company information and EmailJS delivery configuration.</p></div></div><form id="settingsForm" class="panel mt-5 grid md:grid-cols-2 gap-4"><label class="field"><span>Company Name</span><input id="setCompanyName" /></label><label class="field"><span>Company Email</span><input id="setCompanyEmail" type="email" /></label><label class="field"><span>EmailJS Service ID</span><input id="setEmailService" /></label><label class="field"><span>EmailJS Template ID</span><input id="setEmailTemplate" /></label><label class="field md:col-span-2"><span>EmailJS Public Key</span><input id="setEmailPublicKey" /></label><div class="md:col-span-2"><button class="btn btn-gold"><i data-lucide="save"></i>Save Settings</button></div></form></div>
-      </section>
-    </main>
-
-    <nav class="mobile-nav no-print">
-      <button data-view="dashboard" class="active"><i data-lucide="home"></i><span>Home</span></button>
-      <button data-view="blocks"><i data-lucide="grid-3x3"></i><span>Blocks</span></button>
-      <button data-view="sales"><i data-lucide="file-signature"></i><span>Sales</span></button>
-      <button data-view="customers"><i data-lucide="users"></i><span>Clients</span></button>
-    </nav>
-  </div>
-
-  <div id="modal" class="modal hidden no-print"><div id="modalCard" class="modal-card"></div></div>
-
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+  <script type="module">
+    import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js';
+    import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js';
+    import {getFirestore,collection,onSnapshot,addDoc,doc,setDoc,deleteDoc,getDoc,getDocs,query,where,serverTimestamp,writeBatch} from 'https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js';
+    const firebaseConfig={apiKey:'AIzaSyBfiPTfmUFpKPCNN5YGE65UbnyYqg-X8IU',authDomain:'heritage2-a311b.firebaseapp.com',projectId:'heritage2-a311b',storageBucket:'heritage2-a311b.firebasestorage.app',messagingSenderId:'1061852868611',appId:'1:1061852868611:web:8117d3e3fe0c92da169e36',measurementId:'G-NDYPDMN692'};
+    const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app); let active='projects',unsub=null,currentRole='viewer',cache={};
+    const $=s=>document.querySelector(s), money=n=>'LKR '+Number(n||0).toLocaleString('en-LK',{maximumFractionDigits:2});
+    const schemas={
+      projects:{title:'Projects',help:'Land development projects',fields:[['name','Project name','text',1],['location','Location'],['defaultPricePerPerch','Default price per perch','number'],['status','Status','select',1,'Active|Completed']]},
+      blocks:{title:'Blocks',help:'Inventory and correct land-value calculations',fields:[['projectId','Project ID'],['blockNo','Block number','text',1],['perches','Extent (perches)','number',1],['pricePerPerch','Price per perch','number',1],['totalPrice','Total price','number',1,'readonly'],['status','Status','select',1,'Available|Reserved|Sold']]},
+      customers:{title:'Customers',help:'Customer CRM and delivery email',fields:[['name','Full name','text',1],['email','Email','email',1],['phone','Phone','tel'],['nic','NIC / Passport']]},
+      sales:{title:'Sales & Reservations',help:'Confirm a transaction and auto-send its PDF',fields:[['projectName','Project name','text',1],['blockNo','Block number','text',1],['customerName','Customer name','text',1],['customerEmail','Customer email','email',1],['perches','Perches','number',1],['pricePerPerch','Price per perch','number',1],['totalPrice','Total price','number',1,'readonly'],['paidAmount','Paid / reservation amount','number'],['type','Type','select',1,'Reservation|Sale'],['status','Status','select',1,'Pending|Confirmed|Cancelled']]},
+      payments:{title:'Payments & Installments',help:'Customer receipts and installment tracking',fields:[['saleId','Sale / reservation ID'],['customerName','Customer name','text',1],['customerEmail','Customer email','email'],['amount','Amount','number',1],['method','Method','select',1,'Cash|Bank Transfer|Cheque|Card'],['note','Reference / note']]},
+      documents:{title:'Documents',help:'Generated PDF records; delete only when retention policy permits',fields:[['documentNo','Document number','text',1],['customerName','Customer name'],['customerEmail','Customer email','email'],['type','Document type','select',1,'Agreement|Reservation|Receipt'],['emailStatus','Email status','select',1,'Pending|Sent|Failed']]},
+      users:{title:'Users',help:'Firestore role profiles (Authentication accounts are removed separately)',admin:true,fields:[['uid','Firebase Auth UID','text',1],['name','Display name','text',1],['email','Email','email',1],['role','Role','select',1,'admin|manager|officer|viewer'],['active','Active','select',1,'true|false']]}
+    };
+    function toast(m){$('#toast').textContent=m;$('#toast').classList.remove('hidden');setTimeout(()=>$('#toast').classList.add('hidden'),3200)}
+    function canManage(){return ['admin','manager','officer'].includes(currentRole)} function canDelete(){return ['admin','manager'].includes(currentRole)}
+    function tabs(){ $('#tabs').innerHTML=Object.entries(schemas).filter(([,s])=>!s.admin||currentRole==='admin').map(([k,s])=>`<button class="btn ${k===active?'btn-gold':'btn-ghost'}" data-tab="${k}">${s.title}</button>`).join(''); }
+    function openForm(id=''){const s=schemas[active],r=cache[active]?.find(x=>x.id===id)||{};$('#formTitle').textContent=(id?'Edit ':'Add ')+s.title;$('#recordId').value=id;$('#formFields').innerHTML=s.fields.map(([key,label,type='text',req,extra])=>{if(type==='select')return `<label class="text-sm">${label}<select class="field mt-1" name="${key}" ${req?'required':''}>${extra.split('|').map(v=>`<option ${String(r[key])===v?'selected':''}>${v}</option>`).join('')}</select></label>`;return `<label class="text-sm">${label}<input class="field mt-1" name="${key}" type="${type}" value="${r[key]??''}" ${req?'required':''} ${extra||''} ${type==='number'?'min="0" step="0.01" inputmode="decimal"':''}></label>`}).join('')+(['blocks','sales'].includes(active)?'<div class="md:col-span-2 flex items-center gap-3"><button type="button" id="calculateBtn" class="btn btn-gold">Calculate Total</button><span class="text-sm text-zinc-400">Perches × price per perch</span></div>':'');$('#entityDialog').showModal();$('#calculateBtn')?.addEventListener('click',calculateFormTotal)}
+    function calculateFormTotal(){const f=$('#entityForm'),p=Number(f.elements.perches.value),rate=Number(f.elements.pricePerPerch.value);if(!Number.isFinite(p)||!Number.isFinite(rate)||p<=0||rate<0)return toast('Enter valid perches and price per perch');f.elements.totalPrice.value=(p*rate).toFixed(2);toast('Total calculated: '+money(p*rate))}
+    function render(rows){cache[active]=rows;const s=schemas[active];$('#sectionTitle').textContent=s.title;$('#sectionHelp').textContent=s.help;$('#addBtn').classList.toggle('hidden',!canManage());$('#records').innerHTML=rows.length?rows.map(r=>`<article class="panel p-4"><h3 class="font-bold gold">${r.name||r.blockNo||r.customerName||r.documentNo||r.email||'Record'}</h3>${s.fields.slice(0,6).map(([k,l])=>r[k]!==undefined?`<p class="text-sm mt-1"><span class="text-zinc-500">${l}:</span> ${k.toLowerCase().includes('price')||k==='amount'?money(r[k]):r[k]}</p>`:'').join('')}<div class="flex gap-2 mt-3">${canManage()?`<button class="btn btn-ghost" data-edit="${r.id}">Edit</button>`:''}${canDelete()?`<button class="btn btn-danger" data-delete="${r.id}">Delete</button>`:''}</div></article>`).join(''):'<p class="text-zinc-500 py-8">No records yet.</p>'; updateStats()}
+    function subscribe(){unsub?.();tabs();const s=schemas[active];if(s.admin&&currentRole!=='admin'){active='projects';return subscribe()}unsub=onSnapshot(collection(db,active),snap=>render(snap.docs.map(d=>({id:d.id,...d.data()}))),e=>toast(e.message))}
+    async function audit(action,entity,id,details={}){try{await addDoc(collection(db,'auditLogs'),{action,entity,recordId:id,details,userId:auth.currentUser?.uid||'',at:serverTimestamp()})}catch{}}
+    async function removeRecord(id){if(!canDelete())return toast('Manager or admin permission required');const r=cache[active]?.find(x=>x.id===id);if(!confirm(`Permanently delete this ${active.slice(0,-1)}?\n\n${r?.name||r?.blockNo||r?.customerName||r?.documentNo||id}\n\nThis cannot be undone.`))return;await deleteDoc(doc(db,active,id));await audit('delete',active,id,r||{});toast('Record deleted')}
+    async function generatePdf(data){const {jsPDF}=window.jspdf,pdf=new jsPDF();pdf.setTextColor(184,134,11);pdf.setFontSize(18);pdf.text('HERITAGE ASIA HOLDINGS (PVT) LTD',20,20);pdf.setTextColor(20);pdf.setFontSize(11);let y=34;Object.entries(data).filter(([k])=>!['createdAt','updatedAt'].includes(k)).forEach(([k,v])=>{pdf.text(`${k}: ${v??''}`,20,y);y+=7});return {pdf,base64:pdf.output('datauristring').split(',')[1]}}
+    async function autoSend(data,docId){if(active!=='sales'||data.status!=='Confirmed')return;const cfg=JSON.parse(localStorage.getItem('heritageEmailJS')||'{}');const generated=await generatePdf(data),documentNo='HAH-'+Date.now();let emailStatus='Failed';try{if(!cfg.serviceId||!cfg.templateId||!cfg.publicKey)throw Error('EmailJS is not configured');window.emailjs.init({publicKey:cfg.publicKey});await window.emailjs.send(cfg.serviceId,cfg.templateId,{to_email:data.customerEmail,customer_name:data.customerName,project_name:data.projectName,block_no:data.blockNo,total_price:money(data.totalPrice),payment_amount:money(data.paidAmount),balance:money(Number(data.totalPrice)-Number(data.paidAmount)),document_type:data.type,document_no:documentNo,pdf_attachment:generated.base64});emailStatus='Sent';toast('Sale saved and PDF emailed')}catch(e){toast('Saved, but PDF email failed: '+e.message)}await addDoc(collection(db,'documents'),{saleId:docId,documentNo,customerName:data.customerName,customerEmail:data.customerEmail,type:data.type,emailStatus,pdfBase64:generated.base64,createdAt:serverTimestamp()})}
+    async function updateStats(){const names=['projects','blocks','customers','sales'];const values=await Promise.all(names.map(async n=>(await getDocs(collection(db,n))).size));$('#stats').innerHTML=names.map((n,i)=>`<div class="panel p-4"><p class="text-xs text-zinc-500 uppercase">${n}</p><strong class="text-2xl gold">${values[i]}</strong></div>`).join('')}
+    $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();try{await signInWithEmailAndPassword(auth,$('#loginEmail').value.trim(),$('#loginPassword').value)}catch(x){toast(x.message)}});
+    onAuthStateChanged(auth,async user=>{if(!user){$('#loginView').classList.remove('hidden');$('#appView').classList.add('hidden');$('#logoutBtn').classList.add('hidden');return}const profile=await getDoc(doc(db,'users',user.uid));currentRole=profile.exists()?profile.data().role:'viewer';$('#loginView').classList.add('hidden');$('#appView').classList.remove('hidden');$('#logoutBtn').classList.remove('hidden');subscribe()});
+    $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){active=b.dataset.tab;subscribe()}});$('#records').addEventListener('click',e=>{const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');if(edit)openForm(edit.dataset.edit);if(del)removeRecord(del.dataset.delete)});$('#addBtn').onclick=()=>openForm();
+    $('#entityForm').addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,id=$('#recordId').value,data=Object.fromEntries(new FormData(form));schemas[active].fields.filter(x=>x[2]==='number').forEach(([k])=>data[k]=Number(data[k]||0));if(['blocks','sales'].includes(active)){const expected=Number(data.perches)*Number(data.pricePerPerch);if(!Number.isFinite(expected)||expected<=0)return toast('Use Calculate Total with valid values');data.totalPrice=expected}data.updatedAt=serverTimestamp();let ref;if(active==='users'){if(!data.uid)return toast('Firebase Auth UID is required');ref=doc(db,'users',id||data.uid);data.active=data.active==='true';data.createdAt=id?data.createdAt||serverTimestamp():serverTimestamp();await setDoc(ref,data,{merge:true})}else if(id){ref=doc(db,active,id);await setDoc(ref,data,{merge:true})}else{data.createdAt=serverTimestamp();ref=await addDoc(collection(db,active),data)}await audit(id?'update':'create',active,id||ref.id);$('#entityDialog').close();await autoSend(data,id||ref.id);toast('Saved successfully')});
+    document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());$('#logoutBtn').onclick=()=>signOut(auth);$('#settingsBtn').onclick=()=>{const c=JSON.parse(localStorage.getItem('heritageEmailJS')||'{}');$('#emailService').value=c.serviceId||'';$('#emailTemplate').value=c.templateId||'';$('#emailPublic').value=c.publicKey||'';$('#settingsDialog').showModal()};$('#settingsForm').onsubmit=e=>{e.preventDefault();localStorage.setItem('heritageEmailJS',JSON.stringify({serviceId:$('#emailService').value.trim(),templateId:$('#emailTemplate').value.trim(),publicKey:$('#emailPublic').value.trim()}));$('#settingsDialog').close();toast('EmailJS settings saved')};
+  </script>
+</body></html>
