@@ -10,6 +10,10 @@ Responsive HTML/Tailwind/JavaScript land-sales manager using Firebase Authentica
 4. Publish `firestore.rules` from this package.
 5. Serve this folder over HTTPS or localhost. Do not open `index.html` directly with `file://`.
 
+## GitHub Pages deployment
+
+This package includes `.github/workflows/pages.yml`, using Node 24-compatible `actions/checkout@v6` and `actions/upload-pages-artifact@v5`. In Repository Settings → Pages, select **GitHub Actions** as the publishing source. Do not also enable “Deploy from a branch”, because that starts GitHub's separate legacy-generated workflow.
+
 Roles: admins and managers can delete; officers can add/edit; viewers are read-only. A user profile delete does not delete the Firebase Authentication account—remove that separately in Firebase Console. The app prevents users from deleting their own profile through the rules.
 
 All delete actions show a clear permanent-delete confirmation and write an audit entry. Sales, payment and document deletion should only be used in line with the company's accounting and document-retention policy.

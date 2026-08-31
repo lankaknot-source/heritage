@@ -2,59 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function profilePath() { return /databases/$(database)/documents/heritage_users/$(request.auth.uid); }
-    function hasProfile() { return signedIn() && exists(profilePath()); }
-    function p() { return get(profilePath()).data; }
-    function active() { return hasProfile() && p().active != false; }
-    function roleIn(list) { return active() && p().role in list; }
-    function admin() { return roleIn(['admin']); }
-    function manager() { return roleIn(['admin','director','manager']); }
-    function sales() { return roleIn(['admin','director','manager','site_officer','sales_officer']); }
-    function finance() { return roleIn(['admin','director','manager','accountant']); }
-
-    match /heritage_users/{uid} {
-      allow read: if active() && (request.auth.uid == uid || admin());
-      allow create, update, delete: if admin();
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function roleIs(roles) { return signedIn() && profile().active != false && profile().role in roles; }
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create, update: if roleIs(['admin']);
+      allow delete: if roleIs(['admin']) && uid != request.auth.uid;
     }
-    match /heritage_projects/{id} {
-      allow read: if active();
-      allow create, update, delete: if manager();
+    match /auditLogs/{id} { allow read: if roleIs(['admin','manager']); allow create: if signedIn(); allow update, delete: if false; }
+    match /{collectionName}/{id} {
+      allow read: if signedIn();
+      allow create, update: if roleIs(['admin','manager','officer']);
+      allow delete: if roleIs(['admin','manager']);
     }
-    match /heritage_blocks/{id} {
-      allow read: if active();
-      allow create, delete: if manager();
-      allow update: if manager() || sales();
-    }
-    match /heritage_customers/{id} {
-      allow read: if active();
-      allow create, update: if sales() || finance();
-      allow delete: if manager();
-    }
-    match /heritage_sales/{id} {
-      allow read: if active();
-      allow create: if sales();
-      allow update: if sales() || finance();
-      allow delete: if manager();
-    }
-    match /heritage_payments/{id} {
-      allow read: if active();
-      allow create, update: if sales() || finance();
-      allow delete: if manager();
-    }
-    match /heritage_documents/{id} {
-      allow read: if active();
-      allow create, update: if sales() || finance();
-      allow delete: if manager();
-    }
-    match /heritage_settings/{id} {
-      allow read: if active();
-      allow write: if admin();
-    }
-    match /heritage_audit_logs/{id} {
-      allow read: if manager();
-      allow create: if active();
-      allow update, delete: if false;
-    }
-    match /{document=**} { allow read, write: if false; }
   }
 }
