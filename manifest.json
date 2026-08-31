@@ -1,0 +1,9 @@
+{
+  "name":"Heritage Asia Holdings Land Sales",
+  "short_name":"Heritage Asia",
+  "start_url":"./index.html",
+  "display":"standalone",
+  "background_color":"#0a0a0a",
+  "theme_color":"#0a0a0a",
+  "icons":[]
+}

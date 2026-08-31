@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Heritage Asia Holdings — Land Sales Management</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        heritageBlack:'#0a0a0a', heritagePanel:'#141414', heritageGold:'#d4af37', heritageGold2:'#f0cf69', heritageCream:'#fff8e7'
+      }, boxShadow:{gold:'0 12px 36px rgba(212,175,55,.18)'} } }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <div id="toast" class="toast hidden"></div>
+
+  <section id="authGate" class="auth-gate">
+    <div class="auth-card">
+      <div class="brand-lockup">
+        <img src="assets/heritage-logo.jpeg" alt="Heritage Asia Holdings" class="brand-logo" />
+        <div>
+          <p class="eyebrow">HERITAGE ASIA HOLDINGS (PVT) LTD</p>
+          <h1>Land Sales Management</h1>
+          <p class="muted">Secure project, block, customer, payment and document control.</p>
+        </div>
+      </div>
+      <form id="loginForm" class="grid gap-4 mt-6">
+        <label class="field"><span>Email</span><input id="loginEmail" type="email" required placeholder="admin@company.com" /></label>
+        <label class="field"><span>Password</span><input id="loginPassword" type="password" required placeholder="••••••••" /></label>
+        <button class="btn btn-gold" type="submit"><i data-lucide="log-in"></i> Sign In</button>
+      </form>
+      <div id="authMsg" class="notice mt-4 hidden"></div>
+      <div id="bootstrapPanel" class="hidden mt-5 border-t border-zinc-800 pt-5">
+        <p class="font-black text-amber-300">First Admin Setup</p>
+        <p class="text-sm text-zinc-400 mt-1">This Firebase account is authenticated but does not yet have a management profile.</p>
+        <label class="field mt-4"><span>Display Name</span><input id="bootstrapName" placeholder="Administrator" /></label>
+        <button id="bootstrapBtn" type="button" class="btn btn-outline-gold mt-3"><i data-lucide="shield-check"></i>Create Admin Profile</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="appShell" class="hidden min-h-screen lg:flex">
+    <aside class="sidebar no-print">
+      <div class="sidebar-brand">
+        <img src="assets/heritage-logo.jpeg" class="sidebar-logo" alt="Heritage Asia" />
+        <div><div class="font-black text-white tracking-wide">HERITAGE ASIA</div><div class="text-[10px] text-amber-300 tracking-[.22em]">HOLDINGS</div></div>
+      </div>
+      <nav id="mainNav" class="mt-7 space-y-2">
+        <button class="nav-btn active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+        <button class="nav-btn" data-view="projects"><i data-lucide="map"></i><span>Land Projects</span></button>
+        <button class="nav-btn" data-view="blocks"><i data-lucide="grid-3x3"></i><span>Blocks</span></button>
+        <button class="nav-btn" data-view="sales"><i data-lucide="badge-dollar-sign"></i><span>Sales / Reservations</span></button>
+        <button class="nav-btn" data-view="customers"><i data-lucide="users"></i><span>Customers</span></button>
+        <button class="nav-btn" data-view="payments"><i data-lucide="wallet-cards"></i><span>Payments</span></button>
+        <button class="nav-btn" data-view="documents"><i data-lucide="file-text"></i><span>Documents</span></button>
+        <button class="nav-btn admin-only" data-view="users"><i data-lucide="shield-user"></i><span>Users</span></button>
+        <button class="nav-btn admin-only" data-view="settings"><i data-lucide="settings"></i><span>Settings</span></button>
+      </nav>
+      <div class="sidebar-status mt-auto">
+        <span id="cloudDot" class="cloud-dot"></span><span id="cloudText">Connecting...</span>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+      <header class="topbar no-print">
+        <div><p class="eyebrow">HERITAGE ASIA HOLDINGS</p><h2 id="pageTitle" class="text-2xl md:text-3xl font-black">Dashboard</h2></div>
+        <div class="flex items-center gap-2">
+          <div class="user-chip"><span id="userName">User</span><small id="userRole">Role</small></div>
+          <button id="signOutBtn" class="icon-btn" title="Sign Out"><i data-lucide="log-out"></i></button>
+        </div>
+      </header>
+
+      <section class="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
+        <div id="view-dashboard" class="app-view">
+          <div class="hero">
+            <div><p class="text-amber-300 font-black tracking-[.18em] text-xs">LAND SALES CONTROL CENTER</p><h1 class="text-3xl md:text-5xl font-black mt-3">Projects, blocks and sales.<br/>One secure system.</h1><p class="text-zinc-400 mt-3 max-w-2xl">Real-time block availability, field sales, signatures, PDF documents and payment tracking.</p></div>
+            <button id="quickSaleBtn" class="btn btn-gold"><i data-lucide="file-signature"></i> New Sale / Reservation</button>
+          </div>
+          <div id="statsGrid" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-6"></div>
+          <div class="grid xl:grid-cols-[1.2fr_.8fr] gap-6 mt-6">
+            <div class="panel"><div class="panel-head"><div><h3>Recent Sales</h3><p>Latest reservations and confirmed sales</p></div></div><div id="recentSales" class="mt-4"></div></div>
+            <div class="panel"><div class="panel-head"><div><h3>Block Status</h3><p>Live inventory overview</p></div></div><div id="blockStatusSummary" class="mt-4"></div></div>
+          </div>
+        </div>
+
+        <div id="view-projects" class="app-view hidden">
+          <div class="section-head"><div><h2>Land Projects</h2><p>Create and manage block-out developments.</p></div><button id="newProjectBtn" class="btn btn-gold manager-action"><i data-lucide="plus"></i>New Project</button></div>
+          <div id="projectsGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mt-5"></div>
+        </div>
+
+        <div id="view-blocks" class="app-view hidden">
+          <div class="section-head"><div><h2>Block Inventory</h2><p>Available, reserved and sold blocks in real time.</p></div><button id="newBlockBtn" class="btn btn-gold manager-action"><i data-lucide="plus"></i>Add Block</button></div>
+          <div class="panel mt-5"><div class="flex flex-wrap gap-3"><select id="blockProjectFilter" class="control"><option value="">All Projects</option></select><select id="blockStatusFilter" class="control"><option value="">All Statuses</option><option>AVAILABLE</option><option>RESERVED</option><option>SOLD</option><option>HOLD</option></select></div><div id="blocksGrid" class="block-grid mt-5"></div></div>
+        </div>
+
+        <div id="view-sales" class="app-view hidden">
+          <div class="section-head"><div><h2>Sales & Reservations</h2><p>Capture customers, signatures and issue PDF documents.</p></div><button id="newSaleBtn" class="btn btn-gold sales-action"><i data-lucide="file-signature"></i>New Sale / Reservation</button></div>
+          <div class="panel mt-5"><div id="salesTable"></div></div>
+        </div>
+
+        <div id="view-customers" class="app-view hidden"><div class="section-head"><div><h2>Customers</h2><p>Customer CRM and identity records.</p></div></div><div class="panel mt-5"><div id="customersTable"></div></div></div>
+        <div id="view-payments" class="app-view hidden"><div class="section-head"><div><h2>Payments</h2><p>Deposits, installments and outstanding balances.</p></div></div><div class="panel mt-5"><div id="paymentsTable"></div></div></div>
+        <div id="view-documents" class="app-view hidden"><div class="section-head"><div><h2>Documents</h2><p>Generated receipts, reservation forms and sale agreements.</p></div></div><div class="panel mt-5"><div id="documentsTable"></div></div></div>
+        <div id="view-users" class="app-view hidden"><div class="section-head"><div><h2>Users</h2><p>Admin, management and site/sales officer access.</p></div><button id="newUserBtn" class="btn btn-gold admin-only"><i data-lucide="user-plus"></i>Create User</button></div><div class="panel mt-5"><div id="usersTable"></div></div></div>
+        <div id="view-settings" class="app-view hidden"><div class="section-head"><div><h2>Settings</h2><p>Company information and EmailJS delivery configuration.</p></div></div><form id="settingsForm" class="panel mt-5 grid md:grid-cols-2 gap-4"><label class="field"><span>Company Name</span><input id="setCompanyName" /></label><label class="field"><span>Company Email</span><input id="setCompanyEmail" type="email" /></label><label class="field"><span>EmailJS Service ID</span><input id="setEmailService" /></label><label class="field"><span>EmailJS Template ID</span><input id="setEmailTemplate" /></label><label class="field md:col-span-2"><span>EmailJS Public Key</span><input id="setEmailPublicKey" /></label><div class="md:col-span-2"><button class="btn btn-gold"><i data-lucide="save"></i>Save Settings</button></div></form></div>
+      </section>
+    </main>
+
+    <nav class="mobile-nav no-print">
+      <button data-view="dashboard" class="active"><i data-lucide="home"></i><span>Home</span></button>
+      <button data-view="blocks"><i data-lucide="grid-3x3"></i><span>Blocks</span></button>
+      <button data-view="sales"><i data-lucide="file-signature"></i><span>Sales</span></button>
+      <button data-view="customers"><i data-lucide="users"></i><span>Clients</span></button>
+    </nav>
+  </div>
+
+  <div id="modal" class="modal hidden no-print"><div id="modalCard" class="modal-card"></div></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
