@@ -78,3 +78,36 @@ Then open `http://localhost:8080`.
 
 ## PWA
 The project includes `manifest.json` and `sw.js`. HTTPS is required for normal PWA installation outside localhost.
+
+## v1.1 — Mobile safe-area, auto email and block calculations
+
+- Mobile/PWA layout now respects phone status-bar/notch and bottom gesture/navigation safe areas.
+- Sticky top bar, modals, toast messages and bottom navigation are kept inside the usable screen area.
+- Mobile form controls use touch-friendly sizing and avoid iOS input zoom.
+- Block Total Price is now read-only and always recalculates as `Perches × Price / Perch`.
+- Selecting a project automatically loads that project's default price per perch and recalculates the block total.
+- Sale/Reservation Total Price is pulled from the selected block and is read-only to prevent accidental price mismatches.
+- Customer Email is a required, highlighted PDF auto-delivery field.
+- Sale confirmation requires EmailJS configuration so the signed PDF can be sent automatically.
+- Generated signed PDFs now include block extent and price-per-perch details.
+- Documents show email delivery status and offer **Retry Email** when a delivery fails.
+
+### EmailJS attachment requirement
+
+The EmailJS template must accept these variables from the app:
+
+- `to_email`
+- `customer_name`
+- `document_no`
+- `project_name`
+- `block_no`
+- `transaction_type`
+- `total_price`
+- `paid_total`
+- `balance`
+- `company_name`
+- `company_email`
+- `pdf_attachment` (base64/data URL attachment content)
+- `pdf_filename`
+
+Configure the EmailJS template's file attachment to use `pdf_attachment` and the filename variable `pdf_filename`.
